@@ -2,6 +2,15 @@
 
 PixelShield is a powerful image encryption tool that secures your image files using strong encryption algorithms. It protects your visual data from unauthorized access and tampering.
 
+
+```bash
+██████╗ ██╗██╗  ██╗███████╗██╗     ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ 
+██╔══██╗██║╚██╗██╔╝██╔════╝██║     ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗
+██████╔╝██║ ╚███╔╝ █████╗  ██║     ███████╗███████║██║█████╗  ██║     ██║  ██║
+██╔═══╝ ██║ ██╔██╗ ██╔══╝  ██║     ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║
+██║     ██║██╔╝ ██╗███████╗███████╗███████║██║  ██║██║███████╗███████╗██████╔╝
+╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝                                                                               
+```
 ## Features
 
 - Secure image encryption using AES-256 encryption
@@ -137,11 +146,3 @@ MIT License
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Version History
-
-- v0.1.2 (2025)
-  - Added support for 15+ image formats
-  - Enhanced error handling
-  - Improved GUI interface
-  - Added colorful CLI output
-  - Added file validation 
