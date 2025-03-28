@@ -100,7 +100,7 @@ def print_banner():
 {title_color}                ██║     ██║██╔╝ ██╗███████╗███████╗███████║██║  ██║██║███████╗███████╗██████╔╝{END}
 {title_color}                ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝{END}
 {subtitle_color}                                     Secure Image Encryption Tool                                {END}
-{version_color}                                        Version 0.1.2 - 2025                                     {END}
+{version_color}                                        Version 0.2.0 - 2025                                     {END}
 {version_color}                                Supporting {len(SUPPORTED_FORMATS)} Image Formats                                {END}
 """
     print(banner)
@@ -128,12 +128,9 @@ def encrypt_image(input_path: str, output_path: str, password: str) -> None:
         return
     
     try:
-        # Read the image
-        with Image.open(input_path) as img:
-            # Convert image to bytes
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format=img.format)
-            img_byte_arr = img_byte_arr.getvalue()
+        # Read the raw image data without any processing
+        with open(input_path, 'rb') as f:
+            image_data = f.read()
         
         # Generate key and salt
         key, salt = derive_key(password)
@@ -141,8 +138,8 @@ def encrypt_image(input_path: str, output_path: str, password: str) -> None:
         # Create Fernet instance
         f = Fernet(key)
         
-        # Encrypt the image data
-        encrypted_data = f.encrypt(img_byte_arr)
+        # Encrypt the raw image data
+        encrypted_data = f.encrypt(image_data)
         
         # Combine salt and encrypted data
         final_data = salt + encrypted_data
@@ -185,9 +182,10 @@ def decrypt_image(input_path: str, output_path: str, password: str) -> None:
             # Decrypt the data
             decrypted_data = f.decrypt(encrypted_data)
             
-            # Convert back to image and save
-            img = Image.open(io.BytesIO(decrypted_data))
-            img.save(output_path)
+            # Write the decrypted data directly to the output file
+            with open(output_path, 'wb') as f:
+                f.write(decrypted_data)
+                
         except Exception as e:
             print(f"{RED}Error: Failed to decrypt image. Make sure the password is correct: {str(e)}{END}")
             return
