@@ -80,7 +80,6 @@ The GUI provides:
 - Encrypt/Decrypt buttons
 - Status indicators
 - Error messages and success notifications
-- Automatic output filename suggestion
 
 ## Security Features
 

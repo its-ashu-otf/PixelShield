@@ -7,17 +7,9 @@ from pathlib import Path
 # Add the parent directory to the Python path
 sys.path.append(str(Path(__file__).parent))
 
-from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from PIL import Image
-import base64
-import numpy as np
-import io
-import mimetypes
+from tools.image_utils import encrypt_image, decrypt_image, is_supported_image
 
 # ANSI color codes
-BLUE = '\033[94m'
 BOLD = '\033[1m'
 END = '\033[0m'
 CYAN = '\033[96m'
@@ -25,179 +17,18 @@ GREEN = '\033[92m'
 YELLOW = '\033[93m'
 RED = '\033[91m'
 
-# Supported image formats
-SUPPORTED_FORMATS = {
-    # Common formats
-    'JPEG': ['.jpg', '.jpeg', '.jpe', '.jfif'],
-    'PNG': ['.png'],
-    'BMP': ['.bmp', '.dib'],
-    'GIF': ['.gif'],
-    'TIFF': ['.tiff', '.tif'],
-    'WebP': ['.webp'],
-    'ICO': ['.ico'],
-    'HEIC': ['.heic', '.heif'],
-    'AVIF': ['.avif'],
-    'SVG': ['.svg'],
-    # Raw formats
-    'RAW': ['.raw', '.cr2', '.nef', '.arw', '.dng'],
-    # Other formats
-    'PBM': ['.pbm'],
-    'PGM': ['.pgm'],
-    'PPM': ['.ppm'],
-    'XBM': ['.xbm'],
-    'XPM': ['.xpm']
-}
-
-def get_supported_extensions():
-    """Get a list of all supported file extensions."""
-    return [ext for formats in SUPPORTED_FORMATS.values() for ext in formats]
-
-def is_supported_image(file_path: str) -> tuple[bool, str]:
-    """
-    Check if the file is a supported image format.
-    Returns (is_supported, error_message)
-    """
-    try:
-        # Check if file exists
-        if not os.path.exists(file_path):
-            return False, f"{RED}Error: File '{file_path}' does not exist{END}"
-        
-        # Check file size
-        file_size = os.path.getsize(file_path)
-        if file_size == 0:
-            return False, f"{RED}Error: File '{file_path}' is empty{END}"
-        
-        # Check file extension
-        ext = os.path.splitext(file_path)[1].lower()
-        if ext not in get_supported_extensions():
-            return False, f"{RED}Error: Unsupported file format '{ext}'. Supported formats: {', '.join(get_supported_extensions())}{END}"
-        
-        # Try to open the image
-        try:
-            with Image.open(file_path) as img:
-                # Verify it's a valid image
-                img.verify()
-                return True, ""
-        except Exception as e:
-            return False, f"{RED}Error: Invalid or corrupted image file: {str(e)}{END}"
-            
-    except Exception as e:
-        return False, f"{RED}Error: Failed to process file: {str(e)}{END}"
-
 def print_banner():
     """Print a colorful banner for the application."""
-    # Define additional colors
-    MAGENTA = '\033[95m'
-    WHITE = '\033[97m'
-    
-    # Randomly choose colors for different parts
-    colors = [RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE]
-    import random
-    title_color = random.choice(colors)
-    subtitle_color = random.choice(colors)
-    version_color = random.choice(colors)
-    
-    banner = f"""
-{title_color}                ██████╗ ██╗██╗  ██╗███████╗██╗     ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ {END}
-{title_color}                ██╔══██╗██║╚██╗██╔╝██╔════╝██║     ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗{END}
-{title_color}                ██████╔╝██║ ╚███╔╝ █████╗  ██║     ███████╗███████║██║█████╗  ██║     ██║  ██║{END}
-{title_color}                ██╔═══╝ ██║ ██╔██╗ ██╔══╝  ██║     ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║{END}
-{title_color}                ██║     ██║██╔╝ ██╗███████╗███████╗███████║██║  ██║██║███████╗███████╗██████╔╝{END}
-{title_color}                ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝{END}
-{subtitle_color}                                     Secure Image Encryption Tool                                {END}
-{version_color}                                        Version 0.2.0 - 2025                                     {END}
-{version_color}                                Supporting {len(SUPPORTED_FORMATS)} Image Formats                                {END}
-"""
-    print(banner)
-
-def derive_key(password: str, salt: bytes = None) -> tuple[bytes, bytes]:
-    """Derive a key from the password using PBKDF2."""
-    if salt is None:
-        salt = os.urandom(16)
-    
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-    )
-    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
-    return key, salt
-
-def encrypt_image(input_path: str, output_path: str, password: str) -> None:
-    """Encrypt an image file."""
-    # Validate input file
-    is_valid, error_msg = is_supported_image(input_path)
-    if not is_valid:
-        print(error_msg)
-        return
-    
-    try:
-        # Read the raw image data without any processing
-        with open(input_path, 'rb') as f:
-            image_data = f.read()
-        
-        # Generate key and salt
-        key, salt = derive_key(password)
-        
-        # Create Fernet instance
-        f = Fernet(key)
-        
-        # Encrypt the raw image data
-        encrypted_data = f.encrypt(image_data)
-        
-        # Combine salt and encrypted data
-        final_data = salt + encrypted_data
-        
-        # Save the encrypted data
-        with open(output_path, 'wb') as f:
-            f.write(final_data)
-            
-    except Exception as e:
-        print(f"{RED}Error: Failed to encrypt image: {str(e)}{END}")
-        return
-
-def decrypt_image(input_path: str, output_path: str, password: str) -> None:
-    """Decrypt an image file."""
-    try:
-        # Validate input file exists and is not empty
-        if not os.path.exists(input_path):
-            print(f"{RED}Error: Encrypted file '{input_path}' does not exist{END}")
-            return
-            
-        if os.path.getsize(input_path) == 0:
-            print(f"{RED}Error: Encrypted file '{input_path}' is empty{END}")
-            return
-        
-        # Read the encrypted data
-        with open(input_path, 'rb') as f:
-            data = f.read()
-        
-        # Extract salt and encrypted data
-        salt = data[:16]
-        encrypted_data = data[16:]
-        
-        # Derive key using the same salt
-        key, _ = derive_key(password, salt)
-        
-        # Create Fernet instance
-        f = Fernet(key)
-        
-        try:
-            # Decrypt the data
-            decrypted_data = f.decrypt(encrypted_data)
-            
-            # Write the decrypted data directly to the output file
-            with open(output_path, 'wb') as f:
-                f.write(decrypted_data)
-                
-        except Exception as e:
-            print(f"{RED}Error: Failed to decrypt image. Make sure the password is correct: {str(e)}{END}")
-            return
-            
-    except Exception as e:
-        print(f"{RED}Error: Failed to process encrypted file: {str(e)}{END}")
-        return
+    print(f"""
+{GREEN}                ██████╗ ██╗██╗  ██╗███████╗██╗     ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ {END}
+{GREEN}                ██╔══██╗██║╚██╗██╔╝██╔════╝██║     ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗{END}
+{GREEN}                ██████╔╝██║ ╚███╔╝ █████╗  ██║     ███████╗███████║██║█████╗  ██║     ██║  ██║{END}
+{GREEN}                ██╔═══╝ ██║ ██╔██╗ ██╔══╝  ██║     ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║{END}
+{GREEN}                ██║     ██║██╔╝ ██╗███████╗███████╗███████║██║  ██║██║███████╗███████╗██████╔╝{END}
+{GREEN}                ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝{END}
+{CYAN}                                     Secure Image Encryption Tool                                {END}
+{CYAN}                                        Version 0.2.0 - 2025                                     {END}
+""")
 
 def main():
     # Print banner for CLI mode
@@ -254,17 +85,12 @@ def main():
     
     args = parser.parse_args()
     
-    if args.gui:
-        try:
-            from gui import run_gui
-            run_gui()
-        except ImportError as e:
-            print(f"{RED}Error: Failed to import GUI module. Make sure all dependencies are installed.{END}")
-            print(f"{RED}Error details: {str(e)}{END}")
-            print(f"{RED}Current Python path: {sys.path}{END}")
-        return
-        
     if args.command == 'encrypt':
+        valid, error_msg = is_supported_image(args.input)
+        if not valid:
+            print(f"{RED}Error: {error_msg}{END}")
+            return
+        
         encrypt_image(args.input, args.output, args.key)
         print(f"{GREEN}Image encrypted successfully: {args.output}{END}")
     elif args.command == 'decrypt':
