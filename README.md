@@ -71,7 +71,7 @@ python pixel_shield.py decrypt --input secure.enc --output photo.raw --key "myse
 
 To launch the graphical interface:
 ```bash
-python pixel_shield_gui.py
+python pixel_shield.py -gui
 ```
 
 The GUI provides:
