@@ -2,12 +2,13 @@
 import argparse
 import os
 import sys
+from gui.main_window import PixelShieldGUI  # Import from main_window.py
+import customtkinter as ctk
 from pathlib import Path
+from tools.image_utils import encrypt_image, decrypt_image, is_supported_image, SUPPORTED_FORMATS  # Import SUPPORTED_FORMATS
 
 # Add the parent directory to the Python path
 sys.path.append(str(Path(__file__).parent))
-
-from tools.image_utils import encrypt_image, decrypt_image, is_supported_image
 
 # ANSI color codes
 BOLD = '\033[1m'
@@ -85,17 +86,29 @@ def main():
     
     args = parser.parse_args()
     
+    if args.gui:
+        app = PixelShieldGUI()
+        app.mainloop()
+        return
+
     if args.command == 'encrypt':
+        # Check if the input file format is supported
         valid, error_msg = is_supported_image(args.input)
         if not valid:
             print(f"{RED}Error: {error_msg}{END}")
             return
         
-        encrypt_image(args.input, args.output, args.key)
-        print(f"{GREEN}Image encrypted successfully: {args.output}{END}")
+        try:
+            encrypt_image(args.input, args.output, args.key)
+            print(f"{GREEN}Image encrypted successfully: {args.output}{END}")
+        except Exception as e:
+            print(f"{RED}Encryption failed: {e}{END}")
     elif args.command == 'decrypt':
-        decrypt_image(args.input, args.output, args.key)
-        print(f"{GREEN}Image decrypted successfully: {args.output}{END}")
+        try:
+            decrypt_image(args.input, args.output, args.key)
+            print(f"{GREEN}Image decrypted successfully: {args.output}{END}")
+        except Exception as e:
+            print(f"{RED}Decryption failed: {e}{END}")
     elif args.command == 'formats':
         print(f"\n{CYAN}Supported Image Formats:{END}")
         for format_name, extensions in SUPPORTED_FORMATS.items():
