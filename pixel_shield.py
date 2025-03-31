@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import sys
+from pathlib import Path
+
+# Add the parent directory to the Python path
+sys.path.append(str(Path(__file__).parent))
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -9,7 +15,6 @@ import base64
 import numpy as np
 import io
 import mimetypes
-from pathlib import Path
 
 # ANSI color codes
 BLUE = '\033[94m'
@@ -195,7 +200,7 @@ def decrypt_image(input_path: str, output_path: str, password: str) -> None:
         return
 
 def main():
-    # Print banner
+    # Print banner for CLI mode
     print_banner()
     
     parser = argparse.ArgumentParser(
@@ -212,12 +217,18 @@ def main():
   List supported formats:
     {GREEN}%(prog)s formats{END}
 
+  Launch GUI:
+    {GREEN}%(prog)s -gui{END}
+
 {CYAN}Notes:{END}
   - Passwords should be strong and kept secure
   - Encrypted files will have .bin extension by default
   - Original image format is preserved after decryption
 """)
 
+    parser.add_argument('-gui', '--gui', action='store_true',
+                       help='Launch the graphical user interface')
+    
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
     # Encrypt command
@@ -243,6 +254,16 @@ def main():
     
     args = parser.parse_args()
     
+    if args.gui:
+        try:
+            from gui import run_gui
+            run_gui()
+        except ImportError as e:
+            print(f"{RED}Error: Failed to import GUI module. Make sure all dependencies are installed.{END}")
+            print(f"{RED}Error details: {str(e)}{END}")
+            print(f"{RED}Current Python path: {sys.path}{END}")
+        return
+        
     if args.command == 'encrypt':
         encrypt_image(args.input, args.output, args.key)
         print(f"{GREEN}Image encrypted successfully: {args.output}{END}")
