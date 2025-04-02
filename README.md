@@ -59,7 +59,11 @@ python pixel_shield.py formats
 
 To launch the graphical interface:
 ```bash
+<<<<<<< HEAD
 python pyside_app.py
+=======
+python pixel_shield.py -gui
+>>>>>>> fbb589c9fa2061d954b0a0b57d2765f44b724ee5
 ```
 
 The GUI provides:
