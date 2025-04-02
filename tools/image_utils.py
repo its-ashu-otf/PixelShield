@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
+from typing import Tuple
 
 SUPPORTED_FORMATS = {
     'JPEG': ['.jpg', '.jpeg', '.jpe', '.jfif'],
@@ -36,6 +37,9 @@ def derive_key(password: str, salt: bytes) -> bytes:
 
 def encrypt_image(input_path: str, output_path: str, password: str):
     """Encrypt an image using AES-GCM."""
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file '{input_path}' does not exist.")
+
     salt = os.urandom(16)  # Generate a random salt
     key = derive_key(password, salt)  # Derive encryption key
 
@@ -55,8 +59,15 @@ def encrypt_image(input_path: str, output_path: str, password: str):
 
 def decrypt_image(input_path: str, output_path: str, password: str):
     """Decrypt an image encrypted with AES-GCM."""
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file '{input_path}' does not exist.")
+
     with open(input_path, 'rb') as f:
         encrypted_data = f.read()
+
+    # Ensure the file is large enough to contain Salt, IV, Tag, and Ciphertext
+    if len(encrypted_data) < 44:
+        raise ValueError("Invalid encrypted file format.")
 
     # Extract Salt, IV, Tag, and Ciphertext
     salt = encrypted_data[:16]
@@ -76,7 +87,7 @@ def decrypt_image(input_path: str, output_path: str, password: str):
     except Exception as e:
         raise ValueError("Decryption failed. Incorrect password or corrupted file.") from e
 
-def is_supported_image(file_path: str) -> tuple[bool, str]:
+def is_supported_image(file_path: str) -> Tuple[bool, str]:
     """Check if the file is a supported image format."""
     ext = os.path.splitext(file_path)[1].lower()
     supported_extensions = [ext for formats in SUPPORTED_FORMATS.values() for ext in formats]

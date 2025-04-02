@@ -1,4 +1,5 @@
 cryptography
 Pillow
 numpy
-customtkinter
+kivy
+plyer

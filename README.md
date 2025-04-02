@@ -20,7 +20,7 @@ PixelShield is a powerful image encryption tool that secures your image files us
   - Raw formats: RAW, CR2, NEF, ARW, DNG
   - Other formats: PBM, PGM, PPM, XBM, XPM
 - Simple command-line interface with colorful output
-- User-friendly graphical interface
+- User-friendly graphical interface using PySide
 - Preserves image metadata
 - Secure key generation and management
 - Comprehensive error handling and validation
@@ -55,23 +55,11 @@ python pixel_shield.py decrypt --input encrypted.bin --output decrypted.jpg --ke
 python pixel_shield.py formats
 ```
 
-#### Examples
-
-- Encrypt a PNG image:
-```bash
-python pixel_shield.py encrypt --input photo.png --output secure.enc --key "mysecret"
-```
-
-- Decrypt a RAW image:
-```bash
-python pixel_shield.py decrypt --input secure.enc --output photo.raw --key "mysecret"
-```
-
-### Graphical Interface
+#### Launching the GUI
 
 To launch the graphical interface:
 ```bash
-python pixel_shield_gui.py
+python pyside_app.py
 ```
 
 The GUI provides:
@@ -105,7 +93,7 @@ The tool provides detailed error messages for various scenarios:
 
 - Python 3.8 or higher
 - Dependencies listed in requirements.txt
-- tkinter (usually comes with Python)
+- PySide6 for the graphical interface
 - PIL (Pillow) for image processing
 - cryptography for encryption
 
