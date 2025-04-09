@@ -41,6 +41,14 @@ PixelShield is a powerful image encryption tool that secures your image files us
    pip install -r requirements.txt
    ```
 
+## Building
+
+Build using Nuikta, before builduing make sure all dependencies are installed and python version is 3.12
+
+```powershell
+nuitka --standalone --onefile --enable-plugin=tk-inter --include-data-dir=tools=tools --include-data-dir=gui=gui --include-module=cryptography pixel_shield.py
+```
+
 ## Usage
 
 ### Command Line Interface
